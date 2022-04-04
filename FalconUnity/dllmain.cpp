@@ -17,6 +17,7 @@ FALCON_API bool connect_haptic(const unsigned int index) {
     const auto device = handler->getDevice(haptic_device, index);
     if (device) {
         open_devices[index] = haptic_device;
+        haptic_device->open();
     }
     return device;
 }
@@ -31,7 +32,7 @@ FALCON_API bool close_haptic(const unsigned int index) {
 
 FALCON_API vector get_position(const unsigned int index) {
     const auto device = open_devices[index];
-    if (device == nullptr) return {0, 0, 0};
+    if (device == nullptr) return {NAN, NAN, NAN};
     chai3d::cVector3d c_vector;
     device->getPosition(c_vector);
     vector v;
@@ -41,10 +42,23 @@ FALCON_API vector get_position(const unsigned int index) {
     return v;
 }
 
-FALCON_API void apply_force(const unsigned int index, const vector force) {
+FALCON_API bool is_device_connected(const unsigned int index) {
+    return open_devices.find(index) != open_devices.cend();
+}
+
+FALCON_API bool apply_force(const unsigned int index, const vector force) {
     const auto device = open_devices[index];
-    if (device == nullptr) return;
+    if (device == nullptr) return false;
     device->setForce({force.x, force.y, force.z});
+    return true;
+}
+
+FALCON_API bool is_button_pressed(const unsigned int index, const int button_id) {
+    const auto device = open_devices[index];
+    if (device == nullptr) return false;
+    bool status;
+    device->getUserSwitch(button_id, status);
+    return status;
 }
 
 }
